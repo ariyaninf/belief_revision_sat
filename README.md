@@ -125,7 +125,7 @@ Symbolic clauses are converted to natural language with the template-based strat
 
 ### Satisfiability checking
 
-All satisfiability checks — during generation and when evaluating model outputs — are performed with the **[Sat4J](https://www.sat4j.org/)** solver (Le Berre and Parrain, 2010).
+All satisfiability checks during generation and when evaluating model outputs are performed with the **[Sat4J](https://www.sat4j.org/)** solver (Le Berre and Parrain, 2010).
 
 ---
 
