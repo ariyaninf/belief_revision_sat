@@ -138,7 +138,8 @@ belief_revision_sat/
 ├── README.md
 ├── LICENSE
 ├── generator/                    # Problem generator
-│   └── ...
+│   └── GenerateMUSes.java
+│   └── main.java
 ├── data/
 │   ├── main/
 │   │   ├── unsat_6a_26c.jsonl     # 100 unsatisfiable instances (1 removal)
