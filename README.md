@@ -140,22 +140,24 @@ belief_revision_sat/
 │   └── main.java
 ├── data/
 │   ├── main/
-│   │   ├── unsat_6a_26c.jsonl     # 100 unsatisfiable instances (1 removal)
-│   │   └── sat_6a_26c.jsonl       # 100 satisfiable instances
+│   │   ├── MUS_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv     # 100 unsatisfiable instances (1 removal)
+│   │   └── NO_MUS_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv       # 100 satisfiable instances
 │   ├── two_removals/
-│   │   └── unsat_6a_26c_2rm.jsonl
+│   │   └── MUS_3satonly_6_fixVars_26_fixCls_100_2.0_500_OR.csv
 │   ├── varying_clauses/
-│   │   ├── unsat_6a_29c.jsonl
-│   │   ├── ...
-│   │   └── unsat_6a_41c.jsonl
+│   │   ├── MUS_3sat_6_fixVars_29_fixCls_100_1.0_500_OR.csv
+│   │   ├── MUS_3sat_6_fixVars_32_fixCls_100_1.0_500_OR.csv
+│   │   └── MUS_3sat_6_fixVars_35_fixCls_100_1.0_500_OR.csv
+│   │   └── MUS_3sat_6_fixVars_38_fixCls_100_1.0_500_OR.csv
+│   │   └── MUS_3sat_6_fixVars_41_fixCls_100_1.0_500_OR.csv
 │   ├── varying_atoms/
-│   │   ├── unsat_9a_26c.jsonl
-│   │   └── unsat_12a_26c.jsonl
+│   │   ├── MUS_3sat_9_fixVars_26_fixCls_100_1.0_500_OR.csv
+│   │   └── MUS_3sat_12_fixVars_26_fixCls_100_1.0_500_OR.csv
 │   ├── entailment/
-│   │   └── entail_6a_26c.jsonl
+│   │   └── ENT_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv
 │   └── verbalization/
-│       ├── multi_subject.jsonl
-│       └── symbolic.jsonl
+│       ├── MUS_multi_subject_6_fixVars_26_fixCls_100_1.0_500_OR.csv
+│       └── MUS_symbolic_6_fixVars_26_fixCls_100_1_0_500_OR.csv
 ├── prompts/                      # Prompt templates (default, structured, compact, ...)
 └── evaluation/                   # Scripts for checking model outputs with Sat4J
 ```
