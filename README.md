@@ -80,7 +80,7 @@ All clauses are 3-literal disjunctions (3-CNF). Unless stated otherwise, each su
 
 The instances are **synthetically generated**, which allows full control over difficulty and avoids contamination from existing benchmarks.
 
-### Step 1 — Sample random 3-CNF formulas
+### Step 1: Sample random 3-CNF formulas
 
 A set of clauses `X` is sampled at random:
 
@@ -91,7 +91,7 @@ A set of clauses `X` is sampled at random:
 
 The ratio of clauses to atoms (26 / 6 ≈ 4.33) is chosen to approximate the **critical value of ≈ 4.267**, at which randomly generated 3-SAT instances are least likely to be trivially satisfiable or trivially unsatisfiable (Mitchell et al., 1992).
 
-### Step 2 — Filter for non-trivial unsatisfiable instances
+### Step 2: Filter for non-trivial unsatisfiable instances
 
 A sampled set `X` is kept only if it satisfies both criteria:
 
@@ -100,7 +100,7 @@ A sampled set `X` is kept only if it satisfies both criteria:
 
 Criterion 2 ensures that an instance cannot be solved by spotting a single conflict: the model has to find a clause whose removal resolves *all* conflicts at once.
 
-### Step 3 — Construct the belief revision problem
+### Step 3: Construct the belief revision problem
 
 From an accepted set `X` with clauses `α` and `β`:
 
@@ -109,17 +109,17 @@ From an accepted set `X` with clauses `α` and `β`:
 
 Because `X \ {β}` is satisfiable, removing `β` from `K` restores consistency, so the instance is guaranteed to be solvable by removing a **single** clause.
 
-### Step 4 — Satisfiable control instances
+### Step 4: Satisfiable control instances
 
 A separate set of 100 instances `(K, α)` is sampled for which `K ∪ {α}` is **already satisfiable**, using the same parameters (26 clauses in total, 3 literals per clause, 6 atoms). These test whether a model can recognise that **no** revision is needed.
 
-### Step 5 — Variants
+### Step 5: Variants
 
 - **Two-clause removal:** generated with the same procedure, but selecting instances for which restoring consistency requires removing two clauses.
 - **Varying clauses / atoms:** same procedure with the number of clauses set to 29–41 (6 atoms), or the number of atoms set to 9 or 12 (26 clauses). Note that moving away from the critical ratio changes the intrinsic difficulty of the instances.
 - **Entailment:** for each unsatisfiable instance `(K, α)`, the question is whether `K ⊨ ¬α` (where `¬α` is a conjunction of three literals). Since all instances are taken from the unsatisfiable set, **every entailment instance is positive**.
 
-### Step 6 — Verbalization
+### Step 6: Verbalization
 
 Symbolic clauses are converted to natural language with the template-based strategy of Ariyani et al. (2025). Each atom is mapped to a phrase `Alice is [adjective]`, negated literals become `Alice is not [adjective]`, and literals are joined with `or`.
 
