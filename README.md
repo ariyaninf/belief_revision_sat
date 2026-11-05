@@ -131,8 +131,6 @@ All satisfiability checks during generation and when evaluating model outputs ar
 
 ## Repository Structure
 
-> ⚠️ *Adjust this section to match the actual files in the repository.*
-
 ```
 belief_revision_sat/
 ├── README.md
