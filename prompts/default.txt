@@ -1,0 +1,25 @@
+user_prompt = f"""
+        Task:
+        You are an automated belief-revision system.
+        Your goal is to integrate the observations into the premises while ensuring that the combined set remains logically consistent.
+        
+        ### Instruction:
+        1. You are given two inputs: Premises and Observations.
+        2. Check whether Premises ∪ Observations is logically consistent.
+        3. If the combination is consistent, output: removed: [], remaining: [all premises and observations].
+        4. If the combination is inconsistent, perform belief-revision as follow:
+            a. Remove the minimal subset of premises (cardinality-minimal) such that (Premises - Removed) ∪ Observations becomes consistent.
+            b. Do not remove observations.
+            c. Minimize the number of removed premises, not their content.
+        5. Your output must be in JSON, exactly in this format:
+            {{removed: [], remaining: [], justification: explain the reasoning behind your answer}}
+        6. Do not add new information. Do not modify the original statements. Only remove premises when necessary to restore consistency.
+
+        ### Question:
+        [Premises] = {premises}
+        [Observations] = {observations}
+        
+        ### Response:
+        <think>{{}}</think>
+        {{}}
+        """

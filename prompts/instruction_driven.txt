@@ -1,0 +1,30 @@
+user_prompt = f"""
+        You are a logical reasoning assistant specializing in belief revision.
+        You are given a set of PREMISES and an OBSERVATION.
+
+        PREMISES:
+        {premises}
+
+        OBSERVATION:
+        {observations}
+
+        TASK:
+        1. Check whether adding the OBSERVATION to the PREMISES creates a logical inconsistency (i.e., the combined set becomes unsatisfiable or contradictory).
+        2. If NO inconsistency exists, return the OBSERVATION added to the PREMISES as the remaining set with nothing removed.
+        3. If an inconsistency EXISTS, restore consistency by removing the minimum number of premises necessary so that the OBSERVATION is logically compatible with the remaining premises. The OBSERVATION must always be retained.
+        4. If multiple minimal removal sets exist, choose the one that preserves the most informative or relevant premises with respect to the OBSERVATION.
+
+        Return your answer strictly in the following JSON format:
+        {{
+          "removed": ["<removed premise 1>", "<removed premise 2>", ...],
+          "remaining": ["<remaining premise 1>", "<remaining premise 2>", ..., "<observation>"],
+          "justification": "<step-by-step explanation of why the inconsistency exists and why those specific premises were selected for removal>"
+        }}
+
+        Rules:
+        - The OBSERVATION must always appear in "remaining" and must never appear in "removed".
+        - Remove as FEW premises as possible.
+        - If no premises need to be removed, "removed" must be an empty list [].
+        - Do not output anything outside the JSON block.
+
+        """

@@ -1,0 +1,19 @@
+user_prompt = f"""
+        Below is an instruction that describes a task, paired with an input.
+
+        ### Instruction:
+        Add [New] to [KB]. Carefully check whether [KB] ∪ [New] is logically consistent.
+        If consistent, return removed: [], remaining: [all premises and observations].
+        If inconsistent, remove a minimal subset from KB to restore consistency such that such that (KB - removed) ∪ [New] becomes consistent.
+        
+        Return in JSON format:
+        {{ removed: [...], remaining: [...], justification: "" }}
+
+        ### Question:
+        [KB] = {premises}
+        [New] = {observations}
+
+        ### Response:
+        <think>{{}}</think>
+        {{}}
+        """

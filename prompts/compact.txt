@@ -1,0 +1,8 @@
+user_prompt = f"""
+        Task: Add [New] to [KB].
+        If KB ∪ {{New}} is consistent, output KB ∪ {{New}} unchanged.
+        If inconsistent, remove a minimal subset of KB to restore consistency with New.
+        Return the result in JSON format as:
+        {{ "removed": [...], "remaining": [...], "justification": "one short sentence" }}
+        [KB] = {{{row['premises']}}}\n[New] = {{{row['observations']}}}        
+        """

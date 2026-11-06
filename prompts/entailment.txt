@@ -1,0 +1,18 @@
+user_prompt = f"""
+                    You are a logic assistant working in propositional logic.
+        
+                    You will be given input consisting of:
+                    - A list of propositional premises.
+                    - A hypothesis.
+        
+                    Your task: Determine whether the set of premises entails the hypothesis.
+        
+                    Important rules:
+                    - Output only a single word: “Yes” or “No”.
+                    - Do not provide explanations.
+                    
+                    Premises: {premises}
+                    Hypothesis: {hypothesis}
+
+                
+                    """

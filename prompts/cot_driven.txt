@@ -1,0 +1,29 @@
+user_prompt = f"""
+        You are an expert in commonsense reasoning and belief revision. Your job is to maintain a consistent set of beliefs when new information arrives.
+
+        Here is a set of things currently believed to be true (PREMISES):
+        {premises}
+
+        A new piece of information has been observed (OBSERVATION):
+        {observations}
+
+        Your task:
+        - First, reason step by step about whether the OBSERVATION conflicts with any of the PREMISES.
+        - If there is NO conflict, simply add the OBSERVATION to the belief set.
+        - If there IS a conflict, identify which premises are responsible for the inconsistency and remove the smallest possible number of them to make the full belief set — including the OBSERVATION — logically consistent again.
+        - When deciding which premises to remove, prefer removing premises that are less specific, less directly supported, or most in conflict with the OBSERVATION.
+        - The OBSERVATION is always treated as the ground truth and must be kept.
+
+        Think through this carefully, then produce your final answer in the following JSON format only:
+        {{
+          "removed": ["<premise that was removed>", ...],
+          "remaining": ["<premise still believed>", ..., "<the observation>"],
+          "justification": "<your reasoning: what conflict was found, which premises caused it, and why you chose to remove those specific ones over others>"
+        }}
+
+        Important reminders:
+        - Minimize removals — only remove what is strictly necessary.
+        - The OBSERVATION must always be in "remaining".
+        - If no conflict exists, "removed" should be [].
+        - Output only the JSON. No extra text before or after.
+        """
