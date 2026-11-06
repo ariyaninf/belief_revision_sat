@@ -140,7 +140,7 @@ belief_revision_sat/
 │       ├── main.java
 │       ├── GenerateMUSes.java
 │       └── ClauseEntailmentChecker_MUS.java
-├── scripts
+├── scripts                        # Stage 3: verbalization (Python)
 │   ├── verbalize_belief_rev.py    # main sets
 │   ├── verbalize_multi_subject.py # multi-subject variant
 │   ├── LiteralContainer_Names.py
