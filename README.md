@@ -135,9 +135,16 @@ All satisfiability checks during generation and when evaluating model outputs ar
 belief_revision_sat/
 ├── README.md
 ├── LICENSE
-├── generator/                    # Problem generator
-│   └── GenerateMUSes.java
-│   └── main.java
+├── generator/                    # Stage 1: Java generator (SAT4J)
+│   └── edu/clauseentailment/
+│       ├── main.java
+│       ├── GenerateMUSes.java
+│       └── ClauseEntailmentChecker_MUS.java
+├── scripts
+│   ├── verbalize_belief_rev.py    # main sets
+│   ├── verbalize_multi_subject.py # multi-subject variant
+│   ├── LiteralContainer_Names.py
+│   └── SATConverter_Names.py
 ├── data/
 │   ├── main/
 │   │   ├── MUS_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv     # 100 unsatisfiable instances (1 removal)
