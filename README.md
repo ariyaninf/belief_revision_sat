@@ -171,37 +171,105 @@ belief_revision_sat/
 │   ├── main_check.java           # execute the checker
 ```
 
+
+### File naming
+
+Dataset files follow the pattern
+
+```
+MUS_3satonly_<atoms>_fixVars_<clauses>_fixCls_<instances>_<p1>_<p2>_OR.csv
+```
+
+| Part | Example | Meaning |
+|---|---|---|
+| `MUS` | `MUS` | Instances are annotated with their minimal unsatisfiable subsets |
+| `3satonly` | `3satonly` | Every clause has exactly three literals |
+| `<atoms>_fixVars` | `6_fixVars` | Number of atoms, fixed for all instances |
+| `<clauses>_fixCls` | `26_fixCls` | Number of clauses in `K ∪ {α}`, fixed for all instances |
+| `<instances>` | `100` | Number of instances in the file |
+| `<p1>` | `1.0` | ⚠️ *to be described* |
+| `<p2>` | `500` | ⚠️ *to be described* |
+| `OR` | `OR` | ⚠️ *to be described (e.g. clauses verbalized with "or")* |
+
 ---
 
 ## Data Format
 
-> ⚠️ *Example schema — replace the field names with those used in the released files.*
+Each dataset is a **semicolon-separated** CSV file (`;`) with a header row. Each row is one problem instance `(K, α)`. The semicolon is used as delimiter because the list-valued columns contain commas.
 
-Each line of a `.jsonl` file is one problem instance:
+### Columns
 
-```json
-{
-  "id": "unsat_6a_26c_001",
-  "num_atoms": 6,
-  "num_clauses": 26,
-  "atoms": ["resourceful", "prudent", "tactful", "beneficient", "potbellied", "..."],
-  "kb_symbolic": [[-1, 2, 0], ...],
-  "kb_text": ["Alice is not resourceful or Alice is prudent.", "..."],
-  "observation_symbolic": [4, 1],
-  "observation_text": "Alice is beneficient or Alice is resourceful.",
-  "satisfiable": false,
-  "nominees": [5, 6, 8],
-  "gold_removed": [6]
-}
+| Column | Format | Description |
+|---|---|---|
+| `idx` | int | Instance identifier (1–100) |
+| `clauses` | `[l, l, l],[l, l, l],...` | All clauses of `X = K ∪ {α}` in symbolic form, **without enclosing brackets**. Atoms are numbered `1..num_atoms`; a positive integer `i` is atom `i`, a negative integer `-i` is its negation (DIMACS style). |
+| `mus_idx` | `[i, ...],[i, ...],...` | All minimal unsatisfiable subsets (MUSes) of `X`, each given as a list of **1-based indices into `clauses`**, without enclosing brackets |
+| `new_idx` | `[i]` | 1-based index of the observation `α` in `clauses` |
+| `nominees_idx` | `[[i], [i], ...]` | Valid single-clause repairs: each inner list is a set of clauses (1-based indices into `clauses`) whose removal from `K` restores consistency |
+| `premises` | text | The knowledge base `K` in natural language: all clauses except `α`, in the same order as `clauses`, joined into one string (one sentence per clause, each ending with `.`) |
+| `observations` | text | The observation `α` in natural language |
+| `nominees` | `[['...'], ['...'], ...]` | The repairs in `nominees_idx`, verbalized (Python list-literal syntax; sentences without the final `.`) |
+| `num_atoms` | int | Number of atoms |
+| `num_clauses` | int | Number of clauses in `X = K ∪ {α}` |
+| `num_muses` | int | Number of MUSes of `X` (= length of `mus_idx`) |
+
+### How the columns relate
+
+- **Indices refer to `clauses`, not to `premises`.** Since `α` is left out of `premises`, the `j`-th premise sentence corresponds to clause `j` if `j < new_idx`, and to clause `j + 1` otherwise.
+- Because `K` is satisfiable, **every MUS contains `α`**.
+- `nominees_idx` contains exactly the clauses (other than `α`) that occur in **every** MUS. Removing any one of them breaks all conflicts at once, so each is a valid revision.
+- `nominees_idx` lists the single-clause repairs only. Subset-minimal repairs that remove two or more clauses (minimal hitting sets of the MUSes) can also exist and are valid answers, so model outputs should be checked with a SAT solver rather than matched against `nominees` (see [Evaluation Protocol](#evaluation-protocol)).
+- The atom-to-adjective mapping is **sampled per instance** (the main set uses 359 distinct adjectives). It is not stored as a separate column but can be recovered by aligning `clauses` with the verbalized sentences: literals are verbalized in the same order as in `clauses`.
+
+### Example row (shortened)
+
+```
+idx;clauses;mus_idx;new_idx;nominees_idx;premises;observations;nominees;num_atoms;num_clauses;num_muses
+1;[-3, -2, 5],[-5, -3, -2],[2, 3, 4],...;[2, 3, 7, 9, 10, 11, 13, 14, 15, 17, 19],...;[2];[[3], [7], [9], [10], [17], [19]];Alice is not fussy or Alice is not blunt or Alice is abnormal. Alice is blunt or Alice is fussy or Alice is orderly. ...;Alice is not abnormal or Alice is not fussy or Alice is not blunt.;[['Alice is blunt or Alice is fussy or Alice is orderly'], ...];6;26;16
 ```
 
-| Field | Description |
-|---|---|
-| `kb_*` | The knowledge base `K`, in symbolic and verbalized form |
-| `observation_*` | The observation `α` |
-| `satisfiable` | Whether `K ∪ {α}` is satisfiable |
-| `nominees` | Clauses of `K` whose individual removal restores consistency |
-| `gold_removed` | One reference valid revision (other valid revisions may exist) |
+In this instance, atoms 1–6 are *clever, blunt, fussy, orderly, abnormal, sedate*. The observation is clause 2, `[-5, -3, -2]` (*Alice is not abnormal or Alice is not fussy or Alice is not blunt*). `X` has 16 MUSes, and removing any one of clauses 3, 7, 9, 10, 17 or 19 restores consistency.
+
+### Statistics of the main unsatisfiable set
+
+| | Min | Median | Max |
+|---|---|---|---|
+| MUSes per instance (`num_muses`) | 2 | 24 | 190 |
+| Single-clause repairs per instance (`len(nominees_idx)`) | 1 | 5 | 9 |
+
+### Loading the data
+
+```python
+import ast
+import re
+import pandas as pd
+
+
+def load_instances(path):
+    """Load a belief revision dataset file into a DataFrame with parsed columns."""
+    df = pd.read_csv(path, sep=";")
+    # Clause lists and MUS lists are stored without enclosing brackets.
+    for col in ["clauses", "mus_idx"]:
+        df[col] = df[col].apply(lambda s: ast.literal_eval(f"[{s}]"))
+    for col in ["new_idx", "nominees_idx", "nominees"]:
+        df[col] = df[col].apply(ast.literal_eval)
+    # Premises are stored as one string; split it into sentences.
+    df["premises"] = df["premises"].apply(lambda s: re.split(r"(?<=\.)\s+", s.strip()))
+    return df
+
+
+df = load_instances("data/MUS_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv")
+row = df.iloc[0]
+
+obs = row["new_idx"][0]                                              # 1-based index of α in `clauses`
+alpha = row["clauses"][obs - 1]                                      # observation α (symbolic)
+K = [c for i, c in enumerate(row["clauses"], start=1) if i != obs]   # knowledge base K (symbolic)
+
+print(alpha, "->", row["observations"])
+print(len(K), "clauses in K;", len(row["premises"]), "premise sentences")
+```
+
+> **Tip:** opening and re-saving the files in a spreadsheet application (e.g. Excel) can change the delimiter or quoting and break parsing. Use a text editor or the loader above.
 
 ---
 
