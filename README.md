@@ -177,7 +177,7 @@ belief_revision_sat/
 Dataset files follow the pattern
 
 ```
-MUS_3satonly_<atoms>_fixVars_<clauses>_fixCls_<instances>_<p1>_<p2>_OR.csv
+MUS_3satonly_<atoms>_fixVars_<clauses>_fixCls_<instances>_<p1>_500_OR.csv
 ```
 
 | Part | Example | Meaning |
@@ -187,9 +187,7 @@ MUS_3satonly_<atoms>_fixVars_<clauses>_fixCls_<instances>_<p1>_<p2>_OR.csv
 | `<atoms>_fixVars` | `6_fixVars` | Number of atoms, fixed for all instances |
 | `<clauses>_fixCls` | `26_fixCls` | Number of clauses in `K ∪ {α}`, fixed for all instances |
 | `<instances>` | `100` | Number of instances in the file |
-| `<p1>` | `1.0` | ⚠️ *to be described* |
-| `<p2>` | `500` | ⚠️ *to be described* |
-| `OR` | `OR` | ⚠️ *to be described (e.g. clauses verbalized with "or")* |
+| `<p1>` | `1.0` | Number of clauses to be removed |
 
 ---
 
@@ -387,20 +385,123 @@ See the paper for confidence intervals, error breakdowns, run-to-run variability
 
 ---
 
+
 ## Reproducing / Generating New Instances
 
-> ⚠️ *Fill in with the actual commands and dependencies.*
+The dataset is produced in **three stages**: a Java generator creates unsatisfiable clause sets together with all their MUSes, the instances that meet the selection criteria are picked manually, and a Python script turns them into the final natural-language CSV files.
 
-```bash
-# Requirements: Java (for Sat4J), Python 3.x
-git clone https://github.com/ariyaninf/belief_revision_sat.git
-cd belief_revision_sat
-
-# Generate 100 unsatisfiable instances with 6 atoms and 26 clauses
-python generator/generate.py --atoms 6 --clauses 26 --n 100 --type unsat --out data/new/
+```
+┌────────────────────────┐   intermediate CSV   ┌────────────────────────┐   selected CSV   ┌──────────────────────────┐   final CSV
+│ Stage 1: Java (Sat4J)  │   (nset instances:   │ Stage 2: manual        │   (100           │ Stage 3: Python          │   (symbolic +
+│ sample 3-CNF, check    │ ───────────────────► │ selection              │ ───────────────► │ choose α, compute        │ ────────────►  natural language)
+│ SAT, enumerate MUSes   │   clauses + MUSes)   │ (criteria of Step 2)   │   instances)     │ nominees, verbalize      │
+└────────────────────────┘                      └────────────────────────┘                  └──────────────────────────┘
 ```
 
-The generator can be used to create harder instances, for example by increasing the number of clauses or by requiring more clauses to be removed.
+### Requirements
+
+- **Stage 1:** Java, [Sat4J](https://www.sat4j.org/), [OpenCSV](https://opencsv.sourceforge.net/) (imported by `main.java`)
+- **Stage 3:** Python 3.10 or newer (the scripts use `match` statements), `pandas`, `tqdm`
+
+```bash
+git clone https://github.com/ariyaninf/belief_revision_sat.git
+cd belief_revision_sat
+```
+
+### Stage 1: Generate unsatisfiable clause sets (Java)
+
+Classes (package `edu.clauseentailment`):
+
+| File | Role |
+|---|---|
+| `main.java` | Entry point; sets the generation parameters |
+| `GenerateMUSes.java` | Samples clause sets, keeps the unsatisfiable ones and writes them with all their MUSes |
+| `ClauseEntailmentChecker_MUS.java` | Wrapper around Sat4J: adds clauses to a MiniSat solver, checks satisfiability, and enumerates all MUSes with Sat4J's `AllMUSes` (no timeout) |
+
+For each instance, the generator
+
+1. samples `num_clauses` clauses, each with **three distinct atoms** drawn from `1..num_atoms` with a random polarity; duplicate clauses are rejected and the literals in each clause are stored in ascending order;
+2. adds the clauses to Sat4J and checks satisfiability;
+3. discards satisfiable sets, and for unsatisfiable ones **enumerates all MUSes**;
+4. writes the clause set and its MUSes as one row of an intermediate CSV file.
+
+The parameters are set in `main.java` (there are no command-line arguments):
+
+| Variable | Main set | Description |
+|---|---|---|
+| `var` | `6` | Number of atoms (maximum number if `mix_vars = true`) |
+| `min_var` | – | Minimum number of atoms, used only if `mix_vars = true` |
+| `sat` | `3` | Number of literals per clause |
+| `cls` | `26` | Number of clauses (maximum number if `mix_clauses = true`) |
+| `nset` | **> 100** | Number of unsatisfiable instances to generate. Must be larger than the target number of instances, because some are discarded in Stage 2 |
+| `mix_vars` / `mix_clauses` | `false` / `false` | Whether the number of atoms / clauses varies between instances |
+| `prob` | `1.0` | Only used when mixing clause lengths for 2-SAT; has no effect for fixed 3-SAT |
+
+```bash
+# ⚠️ adjust classpath and jar names
+javac -cp "lib/*" -d build generator/edu/clauseentailment/*.java
+java  -cp "build:lib/*" edu.clauseentailment.main
+```
+
+The output file is named `MUS_<sat>sat_<var>_fixVars_<cls>_fixCls_<nset>_<prob>.csv` and has the semicolon-separated columns
+
+```
+id;clauses;mus_indices;num_vars;num_clauses;label;mus_set
+```
+
+where `clauses` lists the clauses in DIMACS-style integer notation (e.g. `[-3, -2, 5],[-5, -3, -2],...`), `mus_indices` lists all MUSes as 1-based clause indices, and `mus_set` is the number of MUSes.
+
+### Stage 2: Select instances (manual)
+
+The generator only guarantees that each clause set is unsatisfiable. The instances used in the benchmark were **selected manually** from the Stage 1 output, keeping only clause sets that meet both criteria of [Step 2](#step-2--filter-for-non-trivial-unsatisfiable-instances):
+
+1. at least **two clauses occur in every MUS** (equivalently, there are two distinct clauses `α`, `β` such that both `X \ {α}` and `X \ {β}` are satisfiable), and
+2. there are **at least two MUSes** (`mus_set ≥ 2`).
+
+Both criteria can be checked directly from the `mus_indices` column. The first 100 selected instances are saved, with the same columns as the Stage 1 output, as a new file such as `MUS_3satonly_6_fixVars_26_fixCls_100_1.0.csv`, which is the input of Stage 3.
+
+### Stage 3 — Verbalize and export to CSV (Python)
+
+| Script | Used for |
+|---|---|
+| ⚠️ `verbalize_belief_ref.py` | Main sets and all variants with the default single-subject verbalization (`Alice is ...`) |
+| `verbalize_multi_entity.py` | Multi-subject verbalization variant (each atom refers to a different person) |
+| `LiteralContainer_Names.py` | Helper: assigns each atom a unique sentence and its negation, using `generate_sentence` and `flip_sentence` from `SATConverter_Names.py` |
+
+For each instance, the verbalization script
+
+1. **chooses the observation `α`**: the clause with the lowest index among the clauses that occur in every MUS (`new_idx`);
+2. **computes the nominees**: `α` is removed from every MUS, and all **smallest hitting sets** of the remaining MUSes are enumerated. Each hitting set is a cardinality-minimal set of clauses whose removal restores consistency (`nominees_idx`);
+3. **verbalizes** every clause with the chosen template: each atom is mapped to a fresh sentence (e.g. `Alice is <adjective>`), its negation to the negated sentence, and the literals of a clause are joined with `or` in the same order as in `clauses`;
+4. writes `K` (all clauses except `α`) to `premises`, `α` to `observations`, and the verbalized nominees to `nominees`.
+
+Example (arguments of `verbalize_multi_entity.py` and `verbalize_belief_rev.py`):
+
+```bash
+python -m scripts.data_preprocessing.verbalize_multi_entity \
+    --dataset MUS_3satonly_6_fixVars_26_fixCls_100_1.0 \
+    --dataset_path <folder with the selected Stage 2 file> \
+    --res_path <output folder> \
+    --temp_type or_only \
+    --vocabs 500
+```
+
+The scripts import `scripts.data_preprocessing...`, so run them from the repository root.
+
+| Argument | Main set | Description |
+|---|---|---|
+| `--dataset` | `MUS_3satonly_6_fixVars_26_fixCls_100_1.0` | Name of the selected Stage 2 file (without `.csv`) |
+| `--dataset_path` | – | Folder containing that file |
+| `--res_path` | – | Output folder |
+| `--temp_type` | `or_only` | Verbalization template: `or_only` (used in the paper), `easy`, `medium`, `hard` |
+| `--vocabs` | `500` | Label for the vocabulary, used in the output file name; the vocabulary itself is defined in `SATConverter_Names.py` |
+
+The output is written to `<dataset>_<vocabs>_<suffix>.csv`, where the suffix is `OR`, `ER`, `MR` or `HR` depending on `--temp_type`. This gives the released file name `MUS_3satonly_6_fixVars_26_fixCls_100_1.0_500_OR.csv`.
+
+### Notes on reproducibility
+
+- Stage 1 uses `ThreadLocalRandom` and Stage 3 samples the vocabulary randomly, both without a fixed seed. Re-running the pipeline therefore produces **new instances**, not an exact copy of the released files. To evaluate on the same instances as in the paper, use the CSV files in `data/`.
+- The generator can be used to create harder instances, for example by increasing the number of clauses or atoms.
 
 ---
 
