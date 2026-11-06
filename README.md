@@ -471,7 +471,7 @@ Both criteria can be checked directly from the `mus_indices` column. The first 1
 
 | Script | Used for |
 |---|---|
-| ⚠️ `verbalize_belief_ref.py` | Main sets and all variants with the default single-subject verbalization (`Alice is ...`) |
+| `verbalize_belief_ref.py` | Main sets and all variants with the default single-subject verbalization (`Alice is ...`) |
 | `verbalize_multi_entity.py` | Multi-subject verbalization variant (each atom refers to a different person) |
 | `LiteralContainer_Names.py` | Helper: assigns each atom a unique sentence and its negation, using `generate_sentence` and `flip_sentence` from `SATConverter_Names.py` |
 
@@ -550,12 +550,6 @@ The verbalization strategy is from:
   publisher = {Association for Computational Linguistics}
 }
 ```
-
----
-
-## License
-
-> ⚠️ *Choose and add a LICENSE file.* A common choice is **CC BY 4.0** for the data and **MIT** for the code.
 
 ---
 
