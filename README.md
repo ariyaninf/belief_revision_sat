@@ -159,6 +159,12 @@ belief_revision_sat/
 │       ├── MUS_multi_subject_6_fixVars_26_fixCls_100_1.0_500_OR.csv
 │       └── MUS_symbolic_6_fixVars_26_fixCls_100_1_0_500_OR.csv
 ├── prompts/                      # Prompt templates (default, structured, compact, ...)
+│   ├── compact.txt
+│   ├── default.txt
+│   ├── instruction_driven.txt
+│   ├── structured.txt
+│   ├── cot_driven.txt
+│   ├── entailment.txt
 └── evaluation/                   # Scripts for checking model outputs with Sat4J
 ```
 
