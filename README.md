@@ -158,7 +158,7 @@ belief_revision_sat/
 │   └── verbalization/
 │       ├── MUS_multi_subject_6_fixVars_26_fixCls_100_1.0_500_OR.csv
 │       └── MUS_symbolic_6_fixVars_26_fixCls_100_1_0_500_OR.csv
-├── prompts/                      # Prompt templates (default, structured, compact, ...)
+├── prompts/                      # Prompt templates 
 │   ├── compact.txt
 │   ├── default.txt
 │   ├── instruction_driven.txt
@@ -166,6 +166,9 @@ belief_revision_sat/
 │   ├── cot_driven.txt
 │   ├── entailment.txt
 └── evaluation/                   # Scripts for checking model outputs with Sat4J
+│   ├── preds_to_dimacs.py        # convert prediction (.json) to dimacs
+│   ├── CheckSatisfiability.java
+│   ├── main_check.java           # execute the checker
 ```
 
 ---
